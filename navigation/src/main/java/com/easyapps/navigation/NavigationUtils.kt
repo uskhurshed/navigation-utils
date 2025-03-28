@@ -26,7 +26,8 @@ object NavigationUtils {
     fun Fragment.navigateTo(fragment: Fragment, addToBackStack: Boolean = true, bundle: Bundle? = null) {
         val tag = fragment::class.java.simpleName
         val view = requireActivity().findViewById<View>(android.R.id.content)
-        if (view.tag == true) return
+         val currentFragment = parentFragmentManager.fragments.lastOrNull()
+        if (view.tag == true || currentFragment != this) return
 
         fragment.arguments = bundle
 
