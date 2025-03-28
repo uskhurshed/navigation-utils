@@ -1,8 +1,12 @@
-package com.easyapps
+package com.easyapps.navigation
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.Animation
+import android.view.animation.TranslateAnimation
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment

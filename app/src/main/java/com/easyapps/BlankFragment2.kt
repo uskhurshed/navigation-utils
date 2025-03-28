@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.easyapps.NavigationUtils.navigateTo
+import com.easyapps.navigation.NavigationUtils.navigateTo
 
 
 class BlankFragment2 : Fragment() {

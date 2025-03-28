@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.easyapps.NavigationUtils.removeFragmentOrUp
+import com.easyapps.navigation.NavigationUtils.removeFragmentOrUp
 
 
 class BlankFragment3 : Fragment() {
