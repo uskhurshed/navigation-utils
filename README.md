@@ -22,7 +22,7 @@ dependencyResolutionManagement {
 
 ```kotlin
 dependencies {
-    implementation("com.github.uskhurshed:Navigation:v1.0.1")
+    implementation("com.github.uskhurshed:navigation-utils:v1.0.1")
 }
 ```
 
