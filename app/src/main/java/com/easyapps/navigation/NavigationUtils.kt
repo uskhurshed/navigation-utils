@@ -3,6 +3,7 @@ package com.easyapps.navigation
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -10,12 +11,15 @@ import androidx.fragment.app.FragmentManager
 object NavigationUtils {
 
     private const val TAG_LOG = "NavigationUtils"
+    private var fragmentContainer: Int? = null
 
-    fun AppCompatActivity.setDefaultFragment(fragment: Fragment) {
+
+    fun AppCompatActivity.setDefaultFragment(@IdRes id: Int,fragment: Fragment) {
+        fragmentContainer = id
         val tag = fragment::class.java.simpleName
         Log.e(TAG_LOG, "🔹 setDefaultFragment: $tag")
         supportFragmentManager.beginTransaction()
-            .replace(R.id.fragment_container, fragment)
+            .replace(fragmentContainer!!, fragment)
             .commit()
     }
 
@@ -36,7 +40,7 @@ object NavigationUtils {
                 R.anim.slide_out_right
             )
             .hide(this)
-            .add(R.id.fragment_container, fragment, tag)
+            .add(fragmentContainer!!, fragment, tag)
             .addToBackStack(if (addToBackStack) tag else null)
             .commit()
 
@@ -93,7 +97,7 @@ object NavigationUtils {
                     R.anim.slide_out_right
                 )
                 .hide(this)
-                .add(R.id.fragment_container, fragment, tag)
+                .add(fragmentContainer!!, fragment, tag)
                 .apply {
                     if (addToBackStack) addToBackStack(tag)
                 }
@@ -104,8 +108,9 @@ object NavigationUtils {
         view.postDelayed({ view.tag = false }, 400)
     }
 
-    fun Fragment.removeFragmentOrUp(tag: String) {
-        Log.e(TAG_LOG, "🗑 removeFragmentOrUp: pop inclusive to '$tag'")
+    fun Fragment.removeFragmentOrUp(fragment: Fragment) {
+        val tag = fragment::class.java.simpleName
+        Log.e(TAG_LOG, "🗑 removeFragmentOrUp: $tag")
         parentFragmentManager.popBackStack(tag, FragmentManager.POP_BACK_STACK_INCLUSIVE)
     }
 }

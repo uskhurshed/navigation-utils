@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import com.easyapps.navigation.NavigationUtils.getBackStack
 import com.easyapps.navigation.NavigationUtils.navigateTo
 import com.easyapps.navigation.NavigationUtils.navigateToIfHaveInStack
+import com.easyapps.navigation.NavigationUtils.removeFragmentOrUp
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -64,7 +65,7 @@ class BlankFragment3 : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         view.setOnClickListener {
-            navigateToIfHaveInStack(BlankFragment2())
+            removeFragmentOrUp(BlankFragment2())
         }
     }
 }
