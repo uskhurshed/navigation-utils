@@ -1,4 +1,4 @@
-package com.easyapps.navigation
+package com.easyapps
 
 import android.os.Bundle
 import android.util.Log

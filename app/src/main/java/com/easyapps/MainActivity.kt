@@ -1,8 +1,8 @@
-package com.easyapps.navigation
+package com.easyapps
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.easyapps.navigation.NavigationUtils.setDefaultFragment
+import com.easyapps.NavigationUtils.setDefaultFragment
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
