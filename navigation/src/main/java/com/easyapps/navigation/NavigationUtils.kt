@@ -75,6 +75,33 @@ object NavigationUtils {
     }
 
 
+    fun Fragment.navigateHardTo(fragment: Fragment, addToBackStack: Boolean = true, bundle: Bundle? = null) {
+        val tag = fragment::class.java.simpleName
+        val currentFragment = parentFragmentManager.fragments.lastOrNull()
+        if (blockActivity || currentFragment != this) return
+
+        fragment.arguments = bundle
+
+        Log.e(TAG_LOG, "➡️ navigateTo: $tag | addToBackStack=$addToBackStack")
+
+        parentFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                R.anim.fade_in,
+                R.anim.fade_out,
+                R.anim.fade_in,
+                R.anim.fade_out
+            )
+            .setMaxLifecycle(this, Lifecycle.State.STARTED) // <-- отключает "resumed"
+            .hide(this)
+            .add(fragmentContainer!!, fragment, tag)
+            .addToBackStack(if (addToBackStack) tag else null)
+            .setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
+            .commit()
+
+        blockActivity = true
+        Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
+    }
+
     fun Fragment.navigateTo(fragment: Fragment, addToBackStack: Boolean = true, bundle: Bundle? = null) {
         val tag = fragment::class.java.simpleName
         val currentFragment = parentFragmentManager.fragments.lastOrNull()
