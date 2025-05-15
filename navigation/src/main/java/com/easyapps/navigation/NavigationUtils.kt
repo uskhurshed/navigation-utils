@@ -19,21 +19,22 @@ object NavigationUtils {
     private var fragmentContainer: Int? = null
     private var blockActivity = false
 
-
     fun AppCompatActivity.setDefaultFragment(@IdRes id: Int,fragment: Fragment) {
+        fragment::class.java.simpleName.showLog(  "🔹 setDefaultFragment:")
         fragmentContainer = id
-        val tag = fragment::class.java.simpleName
-        Log.e(TAG_LOG, "🔹 setDefaultFragment: $tag")
         supportFragmentManager.setDefaultFragment(id,fragment)
     }
 
     fun FragmentManager.setDefaultFragment(@IdRes id: Int,fragment: Fragment) {
+        fragment::class.java.simpleName.showLog(  "🔹 setDefaultFragment:")
         fragmentContainer = id
-        val tag = fragment::class.java.simpleName
-        Log.e(TAG_LOG, "🔹 setDefaultFragment: $tag")
-        beginTransaction()
-            .replace(fragmentContainer!!, fragment)
-            .commit()
+        val beginTransaction = beginTransaction()
+        beginTransaction.replace(fragmentContainer!!, fragment)
+        beginTransaction.commit()
+    }
+
+    private fun Any?.showLog(prefix:String ="") {
+        if (BuildConfig.DEBUG) Log.e(TAG_LOG, "$prefix $this")
     }
 
     fun Fragment.navigateWithClearStack(fragment: Fragment, bundle: Bundle? = null) {
@@ -41,110 +42,70 @@ object NavigationUtils {
 
         val tag = fragment::class.java.simpleName
         fragment.arguments = bundle
-
-        // Очистить стек
-        parentFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left)
-            .replace(fragmentContainer!!, fragment, tag)
-            .commit()
-
+        val supportFragmentManager = requireActivity().supportFragmentManager
+        val beginTransaction = supportFragmentManager.beginTransaction()
+        supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE) // - Очистить стек
+        beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left)
+        beginTransaction .replace(fragmentContainer!!, fragment, tag)
+        beginTransaction  .commit()
         blockActivity = true
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
     }
-
 
     fun Fragment.navigateAndRemoveCurrentFragment(fragment: Fragment, bundle: Bundle? = null) {
         if (blockActivity) return
 
         val tag = fragment::class.java.simpleName
         fragment.arguments = bundle
-
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.slide_in_right,
-                R.anim.slide_out_left
-            )
-            .remove(this)
-            .add(fragmentContainer!!, fragment, tag)
-            .commit()
+        val supportFragmentManager = requireActivity().supportFragmentManager
+        val beginTransaction = supportFragmentManager.beginTransaction()
+        beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left)
+        beginTransaction.remove(this)
+        beginTransaction.add(fragmentContainer!!, fragment, tag)
+        beginTransaction.commit()
 
         blockActivity = true
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
     }
 
 
-    fun Fragment.navigateHardTo(fragment: Fragment, addToBackStack: Boolean = true, bundle: Bundle? = null) {
+    fun Fragment.navigateTo(fragment: Fragment, addToBackStack: Boolean = true,fadeAnimation:Boolean = false, bundle: Bundle? = null) {
         val tag = fragment::class.java.simpleName
-        val currentFragment = parentFragmentManager.fragments.lastOrNull()
-        if (blockActivity || currentFragment != this) return
-
+        val currentFragment = requireActivity().supportFragmentManager.fragments.lastOrNull()
+        if (blockActivity || currentFragment == this) return
         fragment.arguments = bundle
 
-        Log.e(TAG_LOG, "➡️ navigateTo: $tag | addToBackStack=$addToBackStack")
-
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.fade_in,
-                R.anim.fade_out,
-                R.anim.fade_in,
-                R.anim.fade_out
-            )
-            .setMaxLifecycle(this, Lifecycle.State.STARTED) // <-- отключает "resumed"
-            .hide(this)
-            .add(fragmentContainer!!, fragment, tag)
-            .addToBackStack(if (addToBackStack) tag else null)
-            .setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
-            .commit()
-
-        blockActivity = true
-        Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
-    }
-
-    fun Fragment.navigateTo(fragment: Fragment, addToBackStack: Boolean = true, bundle: Bundle? = null) {
-        val tag = fragment::class.java.simpleName
-        val currentFragment = parentFragmentManager.fragments.lastOrNull()
-        if (blockActivity || currentFragment != this) return
-
-        fragment.arguments = bundle
-
-        Log.e(TAG_LOG, "➡️ navigateTo: $tag | addToBackStack=$addToBackStack")
-
-        parentFragmentManager.beginTransaction()
-            .setCustomAnimations(
-                R.anim.slide_in_right,
-                R.anim.slide_out_left,
-                R.anim.slide_in_left,
-                R.anim.slide_out_right
-            )
-            .setMaxLifecycle(this, Lifecycle.State.STARTED) // <-- отключает "resumed"
-            .hide(this)
-            .add(fragmentContainer!!, fragment, tag)
-            .addToBackStack(if (addToBackStack) tag else null)
-            .setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
-            .commit()
+        val beginTransaction = requireActivity().supportFragmentManager.beginTransaction()
+        if (fadeAnimation) beginTransaction.setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+        else beginTransaction. setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+        beginTransaction.setMaxLifecycle(currentFragment  ?: this, Lifecycle.State.STARTED) // <-- отключает "resumed"
+        beginTransaction.hide(currentFragment ?: this)
+        beginTransaction.add(fragmentContainer!!, fragment, tag)
+        beginTransaction.addToBackStack(if (addToBackStack) tag else null)
+        beginTransaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
+        beginTransaction.commit()
 
         blockActivity = true
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
     }
 
     fun Fragment.navigateUp() {
-        val count = parentFragmentManager.backStackEntryCount
-        if (count > 0) parentFragmentManager.popBackStack()
+        val supportFragmentManager = requireActivity().supportFragmentManager
+        val count = supportFragmentManager.backStackEntryCount
+        if (count > 0) supportFragmentManager.popBackStack()
         else requireActivity().finish()
     }
 
     fun Fragment.getBackStack(): Pair<Int, List<String>> {
-        val count = parentFragmentManager.backStackEntryCount
+        val supportFragmentManager = requireActivity().supportFragmentManager
+        val count = supportFragmentManager.backStackEntryCount
         val fragmentNames = mutableListOf<String>()
 
         for (i in 0 until count) {
-            val fragmentName = parentFragmentManager.getBackStackEntryAt(i).name ?: ""
+            val fragmentName = requireActivity().supportFragmentManager.getBackStackEntryAt(i).name ?: ""
             fragmentNames.add(fragmentName)
         }
-
-        Log.e(TAG_LOG, "📦 BackStack Fragment ($count): $fragmentNames")
+        fragmentNames.showLog("📦 BackStack Fragment ($count):")
         return count to fragmentNames
     }
 
@@ -154,37 +115,29 @@ object NavigationUtils {
         if (blockActivity) return
 
         fragment.arguments = bundle
-
-        val isInBackStack = parentFragmentManager.findFragmentByTag(tag) != null
+        val supportFragmentManager = requireActivity().supportFragmentManager
+        val isInBackStack = supportFragmentManager.findFragmentByTag(tag) != null
 
         if (isInBackStack) {
             val removedFragments = mutableListOf<String>()
-            val count = parentFragmentManager.backStackEntryCount
+            val count = supportFragmentManager.backStackEntryCount
             for (i in count - 1 downTo 0) {
-                val entry = parentFragmentManager.getBackStackEntryAt(i)
+                val entry = supportFragmentManager.getBackStackEntryAt(i)
                 if (entry.name == tag) break
                 removedFragments.add(entry.name ?: "unnamed")
             }
-
-            Log.e(TAG_LOG, "🔁 Fragment '$tag' найден в backStack. Удаляется: $removedFragments")
-            parentFragmentManager.popBackStack(tag, 0)
+            removedFragments.showLog("🔁 Fragment '$tag' найден в backStack. Удаляется: ")
+            supportFragmentManager.popBackStack(tag, 0)
         } else {
-            Log.e(TAG_LOG, "➕ Fragment '$tag' НЕ найден в backStack. Добавляется.")
-            parentFragmentManager.beginTransaction()
-                .setCustomAnimations(
-                    R.anim.slide_in_right,
-                    R.anim.slide_out_left,
-                    R.anim.slide_in_left,
-                    R.anim.slide_out_right
-                )
-                .setMaxLifecycle(this, Lifecycle.State.STARTED) // <-- отключает "resumed"
-                .hide(this)
-                .add(fragmentContainer!!, fragment, tag)
-                .setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
-                .apply {
-                    if (addToBackStack) addToBackStack(tag)
-                }
-                .commit()
+            showLog("➕ Fragment '$tag' НЕ найден в backStack. Добавляется.")
+            val beginTransaction = requireActivity().supportFragmentManager.beginTransaction()
+            beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+            beginTransaction.setMaxLifecycle(this, Lifecycle.State.STARTED) // <-- отключает "resumed"
+            beginTransaction.hide(this)
+            beginTransaction.add(fragmentContainer!!, fragment, tag)
+            beginTransaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
+            if (addToBackStack) beginTransaction.addToBackStack(tag)
+            beginTransaction.commit()
         }
 
         blockActivity = true
@@ -193,10 +146,10 @@ object NavigationUtils {
 
     fun Fragment.removeFragmentOrUp(fragment: Fragment) {
         val tag = fragment::class.java.simpleName
-        Log.e(TAG_LOG, "🗑 removeFragmentOrUp: $tag")
-        parentFragmentManager.popBackStack(tag, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        showLog("🗑 removeFragmentOrUp: $tag")
+        val supportFragmentManager = requireActivity().supportFragmentManager
+        supportFragmentManager.popBackStack(tag, FragmentManager.POP_BACK_STACK_INCLUSIVE)
     }
-
 
 
     inline fun <reified T : Fragment> Fragment.showFragment(fragmentRef: KMutableProperty0<T?>, activeRef: KMutableProperty0<Fragment?>, containerId: Int, factory: () -> T) :Boolean {
@@ -221,7 +174,7 @@ object NavigationUtils {
     }
 
 
-    fun onBackPressed(fragment: Fragment,onPressed: (Boolean) -> Unit = {}) {
+    fun setOnBackPressedFragment(fragment: Fragment,onPressed: (Boolean) -> Unit = {}) {
         var lastBackPressedTime = 0L
 
         val backCallback = object : OnBackPressedCallback(true) {
@@ -240,8 +193,6 @@ object NavigationUtils {
             }
         })
     }
-
-
 
 
 }
