@@ -19,15 +19,16 @@ object NavigationUtils {
     private var fragmentContainer: Int? = null
     private var blockActivity = false
 
-    fun AppCompatActivity.setDefaultFragment(@IdRes id: Int,fragment: Fragment) {
+    fun AppCompatActivity.setDefaultFragment(@IdRes id: Int,fragment: Fragment, bundle: Bundle? = null) {
         fragment::class.java.simpleName.showLog(  "🔹 setDefaultFragment:")
         fragmentContainer = id
-        supportFragmentManager.setDefaultFragment(id,fragment)
+        supportFragmentManager.setDefaultFragment(id,fragment,bundle)
     }
 
-    fun FragmentManager.setDefaultFragment(@IdRes id: Int,fragment: Fragment) {
+    fun FragmentManager.setDefaultFragment(@IdRes id: Int,fragment: Fragment, bundle: Bundle? = null) {
         fragment::class.java.simpleName.showLog(  "🔹 setDefaultFragment:")
         fragmentContainer = id
+        fragment.arguments = bundle
         val beginTransaction = beginTransaction()
         beginTransaction.replace(fragmentContainer!!, fragment)
         beginTransaction.commit()
@@ -172,6 +173,14 @@ object NavigationUtils {
         transaction.commit()
         return true
     }
+
+    fun FragmentManager.addFragmentChangedListener(callback: (Fragment, Bundle?) -> Unit) {
+        registerFragmentLifecycleCallbacks(object : FragmentManager.FragmentLifecycleCallbacks() {
+            override fun onFragmentResumed(fm: FragmentManager, fragment: Fragment) =
+                callback(fragment, fragment.arguments)
+        }, true)
+    }
+
 
 
     fun setOnBackPressedFragment(fragment: Fragment,onPressed: (Boolean) -> Unit = {}) {
