@@ -19,10 +19,10 @@ object NavigationUtils {
     private var fragmentContainer: Int? = null
     private var blockActivity = false
 
-    fun AppCompatActivity.setDefaultFragment(@IdRes id: Int,fragment: Fragment, bundle: Bundle? = null) {
+    fun AppCompatActivity.setDefaultFragment(@IdRes id: Int,fragment: Fragment,stateSaved: Bundle? = null, bundle: Bundle? = null) {
         fragment::class.java.simpleName.showLog(  "🔹 setDefaultFragment:")
         fragmentContainer = id
-        supportFragmentManager.setDefaultFragment(id,fragment,bundle)
+        if (stateSaved == null) supportFragmentManager.setDefaultFragment(id,fragment,bundle)
     }
 
     fun FragmentManager.setDefaultFragment(@IdRes id: Int,fragment: Fragment, bundle: Bundle? = null) {
