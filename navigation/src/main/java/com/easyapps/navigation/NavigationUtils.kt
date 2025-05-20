@@ -1,8 +1,5 @@
 package com.easyapps.navigation
 
-import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -76,7 +73,7 @@ object NavigationUtils {
     fun Fragment.navigateTo(fragment: Fragment, addToBackStack: Boolean = true,fadeAnimation:Boolean = false, bundle: Bundle? = null) {
         val tag = fragment::class.java.simpleName
         val currentFragment = requireActivity().supportFragmentManager.fragments.lastOrNull()
-        if (blockActivity || currentFragment == this) return
+        if (blockActivity || currentFragment == fragment) return
         fragment.arguments = bundle
 
         val beginTransaction = requireActivity().supportFragmentManager.beginTransaction()
@@ -156,33 +153,26 @@ object NavigationUtils {
     }
 
 
-    inline fun <reified T : Fragment> Fragment.showFragment(fragmentRef: KMutableProperty0<T?>, activeRef: KMutableProperty0<Fragment?>, containerId: Int, factory: () -> T): Boolean {
-        val tag = T::class.java.simpleName
-        val fragmentManager = childFragmentManager
-        val transaction = fragmentManager.beginTransaction()
+    inline fun <reified T : Fragment> Fragment.showFragment(fragmentRef: KMutableProperty0<T?>, activeRef: KMutableProperty0<Fragment?>, containerId: Int, factory: () -> T) :Boolean {
+        val transaction = childFragmentManager.beginTransaction()
 
-        var target = fragmentManager.findFragmentByTag(tag) as? T
-        if (target == null) target = fragmentRef.get()
+        // Скрыть текущий фрагмент
+        activeRef.get()?.let { transaction.hide(it) }
 
+        // Показать/добавить новый
+        var target = fragmentRef.get()
         if (target == null) {
             target = factory()
             fragmentRef.set(target)
-            transaction.add(containerId, target, tag)
+            transaction.add(containerId, target)
+        } else {
+            transaction.show(target)
         }
 
-        fragmentManager.fragments.forEach {
-            if (it != target && it.isAdded && !it.isHidden) {
-                transaction.hide(it)
-            }
-        }
-        transaction.show(target)
         activeRef.set(target)
-        fragmentRef.set(target)
-        transaction.commitAllowingStateLoss()
+        transaction.commit()
         return true
     }
-
-
 
 
     fun FragmentManager.addFragmentChangedListener(callback: (Fragment, Bundle?) -> Unit) {
@@ -210,15 +200,6 @@ object NavigationUtils {
                 Lifecycle.Event.ON_RESUME -> fragment.requireActivity().onBackPressedDispatcher.addCallback(fragment.viewLifecycleOwner, backCallback)
                 Lifecycle.Event.ON_PAUSE -> backCallback.remove()
                 else -> {}
-            }
-        })
-    }
-    fun Fragment.setLightIconSystemBarsBar(statusBarIconBlack: Boolean, navigationBarIconBlack: Boolean) {
-        viewLifecycleOwner.lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onResume(owner: LifecycleOwner) {
-                val wic = WindowInsetsControllerCompat(requireActivity().window, requireActivity().window.decorView)
-                wic.isAppearanceLightStatusBars = statusBarIconBlack
-                wic.isAppearanceLightNavigationBars = navigationBarIconBlack
             }
         })
     }
