@@ -153,26 +153,32 @@ object NavigationUtils {
     }
 
 
-    inline fun <reified T : Fragment> Fragment.showFragment(fragmentRef: KMutableProperty0<T?>, activeRef: KMutableProperty0<Fragment?>, containerId: Int, factory: () -> T) :Boolean {
-        val transaction = childFragmentManager.beginTransaction()
+    inline fun <reified T : Fragment> Fragment.showFragment(fragmentRef: KMutableProperty0<T?>, activeRef: KMutableProperty0<Fragment?>, containerId: Int, factory: () -> T): Boolean {
+        val tag = T::class.java.simpleName
+        val fragmentManager = childFragmentManager
+        val transaction = fragmentManager.beginTransaction()
 
-        // Скрыть текущий фрагмент
-        activeRef.get()?.let { transaction.hide(it) }
+        var target = fragmentManager.findFragmentByTag(tag) as? T
+        if (target == null) target = fragmentRef.get()
 
-        // Показать/добавить новый
-        var target = fragmentRef.get()
         if (target == null) {
             target = factory()
             fragmentRef.set(target)
-            transaction.add(containerId, target)
-        } else {
-            transaction.show(target)
+            transaction.add(containerId, target, tag)
         }
 
+        fragmentManager.fragments.forEach {
+            if (it != target && it.isAdded && !it.isHidden) {
+                transaction.hide(it)
+            }
+        }
+        transaction.show(target)
         activeRef.set(target)
-        transaction.commit()
+        fragmentRef.set(target)
+        transaction.commitAllowingStateLoss()
         return true
     }
+
 
 
     fun FragmentManager.addFragmentChangedListener(callback: (Fragment, Bundle?) -> Unit) {
