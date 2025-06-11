@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.easyapps.navigation.NavigationUtils.navigateTo
 import kotlin.reflect.KMutableProperty0
 
 object NavigationUtils {
@@ -39,10 +40,11 @@ object NavigationUtils {
     }
 
     fun Fragment.navigateWithClearStack(fragment: Fragment, bundle: Bundle? = null) {
-        if (blockActivity) return
-
         val tag = fragment::class.java.simpleName
+        val currentFragment = requireActivity().supportFragmentManager.fragments.lastOrNull()
+        if (blockActivity || currentFragment == fragment) return
         fragment.arguments = bundle
+
         val supportFragmentManager = requireActivity().supportFragmentManager
         val beginTransaction = supportFragmentManager.beginTransaction()
         supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE) // - Очистить стек
@@ -53,21 +55,25 @@ object NavigationUtils {
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
     }
 
-    fun Fragment.navigateAndRemoveCurrentFragment(fragment: Fragment, bundle: Bundle? = null) {
-        if (blockActivity) return
-
+    fun Fragment.navigateAndRemoveCurrentFragment(fragment: Fragment, addToBackStack: Boolean = true, fadeAnimation: Boolean = false, bundle: Bundle? = null) {
         val tag = fragment::class.java.simpleName
+        val currentFragment = requireActivity().supportFragmentManager.fragments.lastOrNull()
+        if (blockActivity || currentFragment == fragment) return
         fragment.arguments = bundle
-        val supportFragmentManager = requireActivity().supportFragmentManager
-        val beginTransaction = supportFragmentManager.beginTransaction()
-        beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left)
-        beginTransaction.remove(this)
-        beginTransaction.add(fragmentContainer!!, fragment, tag)
+
+        val beginTransaction = requireActivity().supportFragmentManager.beginTransaction()
+        if (fadeAnimation)  beginTransaction.setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+         else  beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+        beginTransaction.setMaxLifecycle(currentFragment  ?: this, Lifecycle.State.STARTED) // <-- отключает "resumed"
+        beginTransaction.replace(fragmentContainer!!, fragment, tag)
+        beginTransaction.addToBackStack(if (addToBackStack) tag else null)
+        beginTransaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
         beginTransaction.commit()
 
         blockActivity = true
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
     }
+
 
 
     fun Fragment.navigateTo(fragment: Fragment, addToBackStack: Boolean = true,fadeAnimation:Boolean = false, bundle: Bundle? = null) {
