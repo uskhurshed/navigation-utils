@@ -56,23 +56,24 @@ object NavigationUtils {
     }
 
     fun Fragment.navigateAndRemoveCurrentFragment(fragment: Fragment, addToBackStack: Boolean = true, fadeAnimation: Boolean = false, bundle: Bundle? = null) {
-        val tag = fragment::class.java.simpleName
-        val currentFragment = requireActivity().supportFragmentManager.fragments.lastOrNull()
-        if (blockActivity || currentFragment == fragment) return
+        if (blockActivity) return
         fragment.arguments = bundle
+        val fm = requireActivity().supportFragmentManager
+        fm.fragments.lastOrNull()?.tag?.let { prevTag ->
+            fm.popBackStack(prevTag, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+        }
 
-        val beginTransaction = requireActivity().supportFragmentManager.beginTransaction()
-        if (fadeAnimation)  beginTransaction.setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
-         else  beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
-        beginTransaction.setMaxLifecycle(currentFragment  ?: this, Lifecycle.State.STARTED) // <-- отключает "resumed"
-        beginTransaction.replace(fragmentContainer!!, fragment, tag)
-        beginTransaction.addToBackStack(if (addToBackStack) tag else null)
-        beginTransaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
+        val beginTransaction = fm.beginTransaction()
+        if (fadeAnimation) beginTransaction.setCustomAnimations(R.anim.fade_in, R.anim.fade_out, R.anim.fade_in, R.anim.fade_out)
+         else beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
+        beginTransaction.replace(fragmentContainer!!, fragment, fragment.javaClass.simpleName)
+        if (addToBackStack) beginTransaction.addToBackStack(fragment.javaClass.simpleName)
         beginTransaction.commit()
 
         blockActivity = true
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
     }
+
 
 
 
