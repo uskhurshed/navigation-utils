@@ -32,7 +32,7 @@ object NavigationUtils {
         fragment.arguments = bundle
         val beginTransaction = beginTransaction()
         beginTransaction.replace(fragmentContainer!!, fragment)
-        beginTransaction.commit()
+        beginTransaction.commitAllowingStateLoss()
     }
 
     private fun Any?.showLog(prefix:String ="") {
@@ -50,7 +50,7 @@ object NavigationUtils {
         supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE) // - Очистить стек
         beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left)
         beginTransaction .replace(fragmentContainer!!, fragment, tag)
-        beginTransaction  .commit()
+        beginTransaction  .commitAllowingStateLoss()
         blockActivity = true
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
     }
@@ -68,7 +68,7 @@ object NavigationUtils {
          else beginTransaction.setCustomAnimations(R.anim.slide_in_right, R.anim.slide_out_left, R.anim.slide_in_left, R.anim.slide_out_right)
         beginTransaction.replace(fragmentContainer!!, fragment, fragment.javaClass.simpleName)
         if (addToBackStack) beginTransaction.addToBackStack(fragment.javaClass.simpleName)
-        beginTransaction.commit()
+        beginTransaction.commitAllowingStateLoss()
 
         blockActivity = true
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
@@ -91,7 +91,7 @@ object NavigationUtils {
         beginTransaction.add(fragmentContainer!!, fragment, tag)
         beginTransaction.addToBackStack(if (addToBackStack) tag else null)
         beginTransaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
-        beginTransaction.commit()
+        beginTransaction.commitAllowingStateLoss()
 
         blockActivity = true
         Handler(Looper.getMainLooper()).postDelayed({ blockActivity = false }, 400)
@@ -145,7 +145,7 @@ object NavigationUtils {
             beginTransaction.add(fragmentContainer!!, fragment, tag)
             beginTransaction.setMaxLifecycle(fragment, Lifecycle.State.RESUMED)
             if (addToBackStack) beginTransaction.addToBackStack(tag)
-            beginTransaction.commit()
+            beginTransaction.commitAllowingStateLoss()
         }
 
         blockActivity = true
